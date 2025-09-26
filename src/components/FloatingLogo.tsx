@@ -7,8 +7,9 @@ export const FloatingLogo = () => {
         href="https://buddy.gohive.ai" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="block hover:scale-105 transition-transform duration-200"
+        className="flex flex-col items-center hover:scale-105 transition-transform duration-200"
       >
+        <span className="text-primary text-sm font-medium mb-1">Powered By</span>
         <img 
           src={hiveAiLogoWhite} 
           alt="Hive AI" 
