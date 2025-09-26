@@ -1,5 +1,6 @@
 import { ROICalculator } from "@/components/ROICalculator";
 import { InklineHeader } from "@/components/InklineHeader";
+import { FloatingLogo } from "@/components/FloatingLogo";
 
 const Index = () => {
   return (
@@ -8,6 +9,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8 flex-grow">
         <ROICalculator />
       </div>
+      <FloatingLogo />
     </div>
   );
 };
