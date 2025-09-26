@@ -38,8 +38,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthStateChange }) => {
         });
       } else {
         toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link to complete your registration.",
+          title: "Account created successfully",
+          description: "You can now sign in with your credentials.",
         });
       }
     } catch (error) {
