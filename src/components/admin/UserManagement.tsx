@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Shield, User, UserPlus, Mail } from 'lucide-react';
+import { Trash2, Shield, User, UserPlus, Mail, Key, RotateCcw } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -39,6 +39,13 @@ export const UserManagement: React.FC = () => {
   const [inviteRole, setInviteRole] = useState<'admin' | 'user'>('user');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
+  const [passwordEmail, setPasswordEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -218,6 +225,102 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const setUserPassword = async () => {
+    if (!passwordEmail.trim() || !newPassword.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter both email and password',
+      });
+      return;
+    }
+
+    setIsSettingPassword(true);
+    
+    try {
+      const response = await supabase.functions.invoke('admin-password-management', {
+        body: {
+          action: 'set_password',
+          email: passwordEmail.trim(),
+          password: newPassword.trim()
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.success) {
+        toast({
+          title: 'Password set successfully',
+          description: `Password has been set for ${passwordEmail}`,
+        });
+        
+        setPasswordEmail("");
+        setNewPassword("");
+        setIsPasswordDialogOpen(false);
+      } else {
+        throw new Error(response.data?.error || 'Failed to set password');
+      }
+    } catch (error: any) {
+      console.error('Error setting password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error setting password',
+        description: error.message || 'Failed to set password',
+      });
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
+
+  const resetUserPassword = async () => {
+    if (!resetEmail.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter an email address',
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+    
+    try {
+      const response = await supabase.functions.invoke('admin-password-management', {
+        body: {
+          action: 'reset_password',
+          email: resetEmail.trim()
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.success) {
+        toast({
+          title: 'Password reset sent',
+          description: `Password reset email sent to ${resetEmail}`,
+        });
+        
+        setResetEmail("");
+        setIsResetDialogOpen(false);
+      } else {
+        throw new Error(response.data?.error || 'Failed to send password reset');
+      }
+    } catch (error: any) {
+      console.error('Error sending password reset:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error sending password reset',
+        description: error.message || 'Failed to send password reset',
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -236,7 +339,115 @@ export const UserManagement: React.FC = () => {
             <User className="w-5 h-5" />
             User Management
           </CardTitle>
-          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+          <div className="flex gap-2">
+            <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Key className="w-4 h-4" />
+                  Set Password
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Key className="w-5 h-5" />
+                    Set User Password
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="password-email">Email Address</Label>
+                    <Input
+                      id="password-email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={passwordEmail}
+                      onChange={(e) => setPasswordEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsPasswordDialogOpen(false);
+                        setPasswordEmail("");
+                        setNewPassword("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={setUserPassword}
+                      disabled={isSettingPassword}
+                      className="flex items-center gap-2"
+                    >
+                      <Key className="w-4 h-4" />
+                      {isSettingPassword ? 'Setting...' : 'Set Password'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Reset Password
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <RotateCcw className="w-5 h-5" />
+                    Send Password Reset
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="reset-email">Email Address</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsResetDialogOpen(false);
+                        setResetEmail("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={resetUserPassword}
+                      disabled={isResettingPassword}
+                      className="flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      {isResettingPassword ? 'Sending...' : 'Send Reset Email'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <UserPlus className="w-4 h-4" />
@@ -295,7 +506,8 @@ export const UserManagement: React.FC = () => {
                 </div>
               </div>
             </DialogContent>
-          </Dialog>
+           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
